@@ -1,0 +1,19 @@
+body {
+    margin: 0;
+    font-family: 'Oxygen', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    padding: 2em 10em 2em 10em;
+    background-image: url('./img/bg-ovr-home.svg');
+    background-repeat: no-repeat;
+    z-index: -1;
+    background-size: 100% auto;
+}
+
+code {
+    font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New', monospace;
+}
+
+.App {
+    text-align: center;
+}
