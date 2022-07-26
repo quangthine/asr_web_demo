@@ -23,11 +23,11 @@ function Result({ res }) {
                 <h3 className="col-md-2">Time (s)</h3>
             </div>
             {res && (
-                <div className="mt-2 pt-1">
+                <div className="mt-2 pt-2">
                     <div className="row justify-content-sm-center overflow-auto">
                         <h4 className="col-2">Conformer</h4>
                         <div id="res" className="col-md-8">
-                            <span className="align-middle"><h6>{cfm}</h6></span>
+                            <span className="align-middle font-weight-bold" style={{ fontSize: 15 }}>{cfm}</span>
                         </div>
                         <p className="col-md-2 font-italic">{time_cfm}</p>
                     </div>

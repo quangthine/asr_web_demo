@@ -1,35 +1,23 @@
 import React, { useEffect, useRef, useState } from "react";
+import { ReactMic } from "react-mic";
 import WaveSurfer from "wavesurfer";
-import uuidv4 from "uuid/dist/v4";
+// import uuidv4 from "uuid/dist/v4";
 
 import { makeStyles } from "@material-ui/core/styles";
-import Avatar from "@material-ui/core/Avatar";
 import Card from "@material-ui/core/Card";
-import CardMedia from "@material-ui/core/CardMedia";
-import CardContent from "@material-ui/core/CardContent";
-import Typography from "@material-ui/core/Typography";
 import IconButton from "@material-ui/core/IconButton";
 import PlayArrowIcon from "@material-ui/icons/PlayArrow";
 import StopIcon from "@material-ui/icons/Stop";
-import ChatBubbleIcon from "@material-ui/icons/ChatBubble";
-import ShareIcon from "@material-ui/icons/Share";
-import FavoriteIcon from "@material-ui/icons/Favorite";
+import ReplayIcon from "@material-ui/icons/Replay";
+
 import { green, red, blue } from "@material-ui/core/colors";
 
 import PauseIcon from "@material-ui/icons/Pause";
 import Grid from "@material-ui/core/Grid";
 
-import List from "@material-ui/core/List";
-import ListItem from "@material-ui/core/ListItem";
-import ListItemText from "@material-ui/core/ListItemText";
-import ListItemAvatar from "@material-ui/core/ListItemAvatar";
+import MicIcon from "@material-ui/icons/Mic";
 
-const faces = [
-    "http://i.pravatar.cc/300?img=1",
-    "http://i.pravatar.cc/300?img=2",
-    "http://i.pravatar.cc/300?img=3",
-    "http://i.pravatar.cc/300?img=4"
-];
+require('dotenv').config();
 
 const useStyles = makeStyles(theme => ({
     card: {
@@ -58,30 +46,41 @@ const useStyles = makeStyles(theme => ({
         minWidth: "100px"
     },
     icon: {
-        height: 18,
-        width: 18
+        height: 22,
+        width: 22
     },
     avatar: {
         display: "inline-block"
+    },
+    reactmic: {
+        width: "100%",
+        height: 100
+    },
+    wavesurfer: {
+        width: "100%",
     }
 }));
 /*
 avatar username ostalo layout sa grid
 
 */
-function AudioPlayer({ file }) {
+function AudioPlayer({ pushRes }) {
     const wavesurfer = useRef(null);
+
+    const [record, setRecord] = useState(false);
+    const [tempFile, setTempFile] = React.useState(null);
 
     const [playerReady, setPlayerReady] = useState(false);
     const [isPlaying, setIsPlaying] = useState(false);
-    const wavesurferId = `wavesurfer--${uuidv4()}`;
 
     useEffect(() => {
+        if (!tempFile) return;
+
         wavesurfer.current = WaveSurfer.create({
-            container: `#${wavesurferId}`,
+            container: "#wavesurfer-id",
             waveColor: "grey",
             progressColor: "tomato",
-            height: 70,
+            height: 100,
             cursorWidth: 1,
             cursorColor: "lightgray",
             barWidth: 2,
@@ -107,14 +106,36 @@ function AudioPlayer({ file }) {
         wavesurfer.current.on("play", () => setIsPlaying(true));
         wavesurfer.current.on("pause", () => setIsPlaying(false));
         window.addEventListener("resize", handleResize, false);
-    }, []);
+    }, [tempFile]);
 
     useEffect(() => {
-        console.log("file", file);
-        if (file) {
-            wavesurfer.current.load(file.blobURL);
+        console.log("file", tempFile);
+        if (tempFile) {
+            wavesurfer.current.load(tempFile.blobURL);
+
+            console.log("blob", tempFile.blob);
+
+            // var xhr = new XMLHttpRequest();
+            var fd = new FormData();
+            var filename = new Date().toISOString();
+            fd.append("audio_data", tempFile.blob, filename);
+            // xhr.open("POST", "http://127.0.0.1:5000/result", true);
+            // xhr.send(fd);
+            fetch(process.env.REACT_APP_API_ENDPOINT, {
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json'
+                },
+                method: 'POST',
+                body: fd
+
+            }).then(response => response.json())
+                .then(json => {
+                    console.log(json);
+                    pushRes(json)
+                });
         }
-    }, [file]);
+    }, [tempFile]);
 
     const togglePlayback = () => {
         if (!isPlaying) {
@@ -144,17 +165,80 @@ function AudioPlayer({ file }) {
         );
     }
 
-    return (
+    const onStop = recordedBlob => {
+        setTempFile(recordedBlob);
+    };
+
+    const onData = recordedBlob => {
+        console.log("chunk of real-time data is: ", recordedBlob);
+    };
+
+    const startRecording = () => {
+        setTempFile(null);
+        setRecord(true);
+    };
+
+    const resetRecording = () => {
+        setTempFile(null);
+    };
+
+    const stopRecording = () => {
+        setRecord(false);
+    };
+
+    return (    
         <>
-            <Card className={classes.card}>
+            <Card className={classes.card} >
                 <Grid container direction="column">
-                    <Grid item id={wavesurferId} className="pt-2 pb-2 border-bottom" />
-                    <Grid item container className={classes.buttons}>
-                        <Grid item xs={7}>
+                    <Grid item className="p-2 border-bottom">
+                        {tempFile ? (
+                            <div className={classes.wavesurfer} id="wavesurfer-id" />
+                        ) : (
+                            <ReactMic
+                                record={record}
+                                className={classes.reactmic}
+                                onStop={onStop}
+                                onData={onData}
+                                strokeColor="grey"
+                                backgroundColor="white"
+                                mimeType="audio/wav"
+                            />
+                        )}
+                    </Grid>
+                    <Grid item container justify="center" className={classes.buttons}>
+                        <Grid item container direction="row"
+                            justifyContent="space-between"
+                            alignItems="center" xs={12}>
+                            {!record && !tempFile && (
+                                <IconButton onClick={startRecording}>
+                                    <MicIcon
+                                        className={classes.icon}
+                                    />
+                                </IconButton>
+                            )}
+
+                            {!record && tempFile && (
+                                <IconButton onClick={resetRecording}>
+                                    <ReplayIcon
+                                        className={classes.icon}
+                                    />
+                                </IconButton>
+                            )}
+
+                            {record && (
+                                <IconButton onClick={stopRecording}>
+                                    <MicIcon
+                                        style={{ color: red[500] }}
+                                        className={classes.icon}
+                                    />
+                                </IconButton>
+                            )}
+                            <Grid item>
                             {transportPlayButton}
                             <IconButton onClick={stopPlayback}>
-                                <StopIcon className={classes.icon} />
-                            </IconButton>
+                                    <StopIcon className={classes.icon} />
+                                </IconButton>
+                            </Grid>
                         </Grid>
                     </Grid>
                 </Grid>

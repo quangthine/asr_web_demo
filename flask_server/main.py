@@ -5,8 +5,7 @@ from flask import Flask
 from flask import request
 from flask import render_template
 import flask
-import os
-import socket
+
 from pydub import AudioSegment as am
 from scipy.io import wavfile
 import grpc
@@ -14,16 +13,19 @@ import grpc
 import stt_service_pb2
 import stt_service_pb2_grpc
 from google.protobuf.json_format import MessageToDict
-import io
-import wave
-import json
+
 import soundfile as sf
 import time
+from flask_cors import CORS
+
+# PORT=5000
 
 CHANNEL_IP = 'localhost:5001'
 channel = grpc.insecure_channel(CHANNEL_IP)
 stub = stt_service_pb2_grpc.SttServiceStub(channel)
 app = Flask(__name__)
+CORS(app)
+
 def gen(audio_bytes):
     specification = stt_service_pb2.RecognitionSpec(
         partial_results=True,
@@ -48,6 +50,7 @@ def run_transcription(audio_bytes):
     except grpc._channel._Rendezvous as err:
         print('Error code %s, message: %s' % (err._state.code, err._state.details))
     return ""
+
 @app.route("/result", methods=['POST', 'GET'])
 def index():
     transcript = ""
@@ -96,5 +99,5 @@ def index():
     return response
 
 if __name__ == "__main__":
+    # app.run(debug=True)
     app.run(debug=True)
-    # app.run(host='0.0.0.0',port=8000)
