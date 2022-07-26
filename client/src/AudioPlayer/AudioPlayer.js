@@ -121,11 +121,9 @@ function AudioPlayer({ pushRes }) {
             fd.append("audio_data", tempFile.blob, filename);
             // xhr.open("POST", "http://127.0.0.1:5000/result", true);
             // xhr.send(fd);
-            fetch(process.env.REACT_APP_API_ENDPOINT, {
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Accept': 'application/json'
-                },
+            // let headers = new Headers();
+
+            fetch("http://127.0.0.1:5000/result", {
                 method: 'POST',
                 body: fd
 

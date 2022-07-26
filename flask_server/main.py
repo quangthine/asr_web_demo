@@ -16,7 +16,7 @@ from google.protobuf.json_format import MessageToDict
 
 import soundfile as sf
 import time
-from flask_cors import CORS
+# from flask_cors import CORS, cross_origin
 
 # PORT=5000
 
@@ -24,7 +24,8 @@ CHANNEL_IP = 'localhost:5001'
 channel = grpc.insecure_channel(CHANNEL_IP)
 stub = stt_service_pb2_grpc.SttServiceStub(channel)
 app = Flask(__name__)
-CORS(app)
+# CORS(app)
+# app.config['CORS_HEADERS'] = 'Content-Type'
 
 def gen(audio_bytes):
     specification = stt_service_pb2.RecognitionSpec(
@@ -52,6 +53,7 @@ def run_transcription(audio_bytes):
     return ""
 
 @app.route("/result", methods=['POST', 'GET'])
+# @cross_origin()
 def index():
     transcript = ""
     total_time = 0.0
@@ -99,5 +101,4 @@ def index():
     return response
 
 if __name__ == "__main__":
-    # app.run(debug=True)
     app.run(debug=True)
